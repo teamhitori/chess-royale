@@ -1,8 +1,0 @@
-node_modules
-bin
-obj
-build
-web
-client
-server
-.git
