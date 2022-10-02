@@ -218,3 +218,8 @@ Lets walk through this code quickly, we create an inline function `configureMesh
 You should now see the following
 
 ![Frakas Chess board](https://raw.githubusercontent.com/teamhitori/chess-royale/main/raw/chess-board.gif)
+
+
+I hope you enjoyed this chapter and found it useful, please leave a comment and join me in the next chapter where we'll start to add some movement and see how this looks running on a phone.
+
+Thanks!
