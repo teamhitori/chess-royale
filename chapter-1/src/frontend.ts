@@ -1,8 +1,9 @@
 
 import { Engine, Scene, Vector3, HemisphericLight, ShadowGenerator, PointLight, MeshBuilder, StandardMaterial, ArcRotateCamera, Matrix, Color3, AssetContainer, SceneLoader, Texture, AbstractMesh } from "babylonjs";
-import { createFrontend } from '@frakas/api/public';
+import { createFrontend, FrontendTopic } from '@frakas/api/public';
 import { PlayerEvent } from "./shared";
 import { LogLevel } from "@frakas/api/utils/LogLevel";
+import { filter, tap } from "rxjs";
 
 import 'babylonjs-loaders';
 
@@ -133,7 +134,7 @@ scene.onPointerDown = function castRay() {
     if (hit?.pickedMesh && hit.pickedMesh.name == "sphere") {
 
         // send enable player color event to backend
-        api?.sendToBackend(<PlayerEvent>{
+        api?.sendEvent(<PlayerEvent>{
             enable: true,
             color: myColor
         });
@@ -144,9 +145,8 @@ scene.onPointerDown = function castRay() {
 scene.onPointerUp = function castRay() {
 
     // send disable player color event to backend
-    api?.sendToBackend(<PlayerEvent>{
-        enable: false,
-        color: myColor
+    api?.sendEvent(<PlayerEvent>{
+        enable: false
     });
 }
 
@@ -164,8 +164,12 @@ window.addEventListener('resize', () => {
 api?.playerEnter();
 
 // receive public events from backend
-api?.onPublicEvent<PlayerEvent>()
-    .subscribe((event) => {
-
-    });
+api?.receiveEvent<PlayerEvent>()
+    .pipe(
+        filter(e => e.topic == FrontendTopic.publicEvent),
+        tap(event => {
+            console.log(event)
+        })
+    )
+    .subscribe();
 

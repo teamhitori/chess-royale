@@ -1,45 +1,36 @@
 import { Color3 } from "babylonjs";
-import { createBackend } from '@frakas/api/public';
+import { BackendTopic, createBackend } from '@frakas/api/public';
 import { PlayerColor, PlayerEvent } from "./shared";
 import { LogLevel } from "@frakas/api/utils/LogLevel";
+import { filter, tap } from "rxjs";
 
 // Create backend and receive api for calling frontend
-var api = await createBackend({ loglevel: LogLevel.diagnosic });
+var api = await createBackend({ loglevel: LogLevel.info });
 
 // default sphere color
 var sphereDefaultColor = new Color3(0.7, 0.7, 0.7);
 
-// keep track of entered players in array
-var playerColors: PlayerColor[] = [];
+// keep track of entered players
+var playerColors: { [playerPosition: number]: Color3 | undefined } = {};
 
-api?.onPlayerEvent<PlayerEvent>()
-    .subscribe((event) => {
+api?.receiveEvent<PlayerEvent>()
+    .pipe(
+        filter(e => e.topic == BackendTopic.playerEvent),
+        tap(event => {
+            // set player color (if defined)
+            playerColors[event.playerPosition!!] = event?.state?.color;
 
-        if (event.playerState.enable) {
-
-            // Add player color to list, if not already added
-            if (!playerColors.some(p => p.playerPosition == event.playerPosition)) {
-                playerColors.push({ playerPosition: event.playerPosition, color: event.playerState.color });
+            // send most recent color to all players if exists, or else send default color
+            if (event?.state?.color) {
+                api?.sendToAll(<PlayerEvent>{
+                    enable: true,
+                    color: event?.state?.color
+                });
+            } else {
+                api?.sendToAll(<PlayerEvent>{
+                    enable: false
+                });
             }
-        } else {
-
-            // else remove player color, if exists in list
-            playerColors = playerColors.filter(p => p.playerPosition != event.playerPosition);
-        }
-
-        // send most recent color to all players if exists, or else send default color
-        if (playerColors.length) {
-            var playerColor = playerColors[playerColors.length - 1];
-
-            api?.sendToAll(<PlayerEvent>{
-                enable: true,
-                color: playerColor.color
-            });
-        } else {
-            api?.sendToAll(<PlayerEvent>{
-                enable: true,
-                color: sphereDefaultColor
-            });
-        }
-    });
+        })
+    ).subscribe();
 
