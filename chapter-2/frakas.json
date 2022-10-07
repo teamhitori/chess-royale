@@ -1,0 +1,11 @@
+{
+  "entryPoint": "./src/index.ts",
+  "fillScreen": true,
+  "gameName": "chess royale",
+  "screenRatio": "1",
+  "gameThumbnail": "",
+  "webPort": "8080",
+  "clientDir": "web",
+  "serverDir": "server",
+  "remoteHost": ""
+}
