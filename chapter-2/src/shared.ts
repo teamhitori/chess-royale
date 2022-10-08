@@ -1,4 +1,4 @@
-import { Mesh, StandardMaterial, Vector3 } from "babylonjs"
+import { AbstractMesh, Mesh, StandardMaterial, Vector3 } from "babylonjs"
 
 export enum EventType {
     GameState,
@@ -35,4 +35,31 @@ export enum GridBlockStatus {
     path,
     blocked,
     hit
+}
+
+export enum PieceState {
+    alive,
+    dead
+}
+
+export interface PlayerPiece {
+    pieceName: string
+    gridPosition: number,
+    pieceState: PieceState
+}
+
+export interface Player {
+    playerSide: PlayerSide,
+    pieces: { [name: string]: PlayerPiece }
+}
+
+export interface FrontendPlayer extends Player {
+    meshes: { [name: string]: AbstractMesh },
+    selectedPiece: PlayerPiece | undefined,
+}
+
+const __grid_width = 12;
+
+export function gridToWorld(gridPosition: number, ): Vector3 {
+    return new Vector3(-Math.floor(gridPosition / __grid_width), 0.1, (gridPosition % __grid_width))
 }

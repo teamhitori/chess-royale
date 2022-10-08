@@ -127,7 +127,7 @@ Now when you refresh the page and check console output you should see the follow
 My Player Side: top
 ```
 
-### 2. Make Grid Selectable
+### 2. Add Grid Numbers
 
 Add the following types to `src/shared.ts`
 
@@ -221,6 +221,182 @@ import 'babylonjs-loaders';
 ```
 
 Run the game and you should now see somethink similar to this
+
+![Frakas Chess piece](https://raw.githubusercontent.com/teamhitori/chess-royale/main/raw/grid-numbered.gif)
+
+### 3. Make grid Selectable
+
+Let's add the following interfaces to `src/shared.ts` and resolve `imports`
+
+```ts
+export enum PieceState {
+    alive,
+    dead
+}
+
+export interface playerPiece {
+    pieceName: string
+    gridPosition: number,
+    pieceState: PieceState
+}
+
+export interface Player {
+    playerSide: PlayerSide,
+    pieces: { [name: string]: playerPiece }
+}
+
+export interface FrontendPlayer extends Player {
+    meshes: { [name: string]: AbstractMesh },
+    selectedPiece: playerPiece | undefined,
+}
+```
+
+Next add the following `const` and `function` to the same file:
+
+```ts
+const __grid_width = 12;
+
+export function gridToWorld(gridPosition: number, ): Vector3 {
+    return new Vector3(-Math.floor(gridPosition / __grid_width), 0.1, (gridPosition % __grid_width))
+}
+```
+
+Open `src/frontend.ts` and find the part of the file where `scene.onPointerUp` event is set, update this to the following:
+
+```ts
+scene.onPointerUp = function castRay() {
+    var ray = scene.createPickingRay(scene.pointerX, scene.pointerY, Matrix.Identity(), camera);
+    var hit = scene.pickWithRay(ray);
+    console.log("hit", hit?.pickedMesh?.id, hit?.pickedPoint)
+
+    if (hit?.pickedMesh && hit.pickedMesh.name == "block" && hit.pickedPoint) {
+
+        console.log("hit block", hit.pickedMesh.id);
+        if (myPlayer != undefined) {
+            onSelection(myPlayer, +hit.pickedMesh.id);
+        }
+    }
+}
+```
+
+Lets now add the follwoing function to the bottom of `src/frontend.ts` to more explicitly create a player.
+
+```ts
+function createNewPlayerMesh(player: Player): FrontendPlayer {
+
+    var meshes: { [name: string]: AbstractMesh } = {};
+
+    for (const pieceName in player.pieces) {
+        var piece = player.pieces[pieceName]
+        const worldPosition = gridToWorld(piece.gridPosition)
+        meshes[pieceName] = configureMesh(chessPieces.rootNodes[0].getChildMeshes()[pieceMapping[pieceName]].clone("", null, false)!!, Color3.Blue(), worldPosition)
+    }
+
+    return <FrontendPlayer>{
+        meshes: meshes,
+        selectedPiece: undefined,
+        pieces: player.pieces,
+        playerSide: player.playerSide,
+        playerState: player.playerState
+    }
+}
+
+```
+
+the we can add the following `function` underneath to handle when the user clicks on a grid piece
+
+```ts
+function onSelection(myPlayer: FrontendPlayer, gridPosition: number) {
+    if (myPlayer.selectedPiece != undefined && myPlayer.selectedPiece.gridPosition != gridPosition) {
+        var newWorldPosition = gridToWorld(gridPosition);
+        var oldPosition = myPlayer.selectedPiece.gridPosition;
+        myPlayer.selectedPiece.gridPosition = gridPosition;
+        myPlayer.meshes[myPlayer.selectedPiece.pieceName].position = newWorldPosition;
+
+        grid[oldPosition].material.diffuseColor = new Color3(1, 1, 1);
+        grid[gridPosition].material.diffuseColor = new Color3(1, 1, 1);
+        myPlayer.selectedPiece = undefined;
+        return
+    }
+
+    for (const pieceName in myPlayer.pieces) {
+        const piece = myPlayer.pieces[pieceName]!!;
+
+        if (piece.gridPosition == gridPosition && piece.pieceState == PieceState.alive) {
+            grid[gridPosition].material.diffuseColor = new Color3(1, 1, 0);
+
+            if (!myPlayer.selectedPiece) {
+                myPlayer.selectedPiece = piece;
+                return;
+            }
+            if (myPlayer.selectedPiece.gridPosition == gridPosition) {
+                myPlayer.selectedPiece = undefined;
+                grid[gridPosition].material.diffuseColor = new Color3(1, 1, 1);
+                return;
+            }
+        }
+    }
+}
+```
+
+Remove grid `pieces1` and replace with 
+
+```ts
+var myPlayerSide: PlayerSide | undefined;
+var myPlayer: FrontendPlayer | undefined;
+```
+
+Add the following function
+
+``` ts
+export function getStartPosition(side: PlayerSide): Player {
+
+    var pieces: { [piece: string]: number } = {
+        "pawn1": 14,
+        "pawn2": 15,
+        "pawn3": 16,
+        "pawn4": 17,
+        "pawn5": 18,
+        "pawn6": 19,
+        "pawn7": 20,
+        "pawn8": 21,
+        "tower1": 2,
+        "tower2": 9,
+        "knight1": 3,
+        "knight2": 8,
+        "bishop1": 4,
+        "bishop2": 7,
+        "queen": 5,
+        "king": 6
+    }
+
+    var player = <Player>{
+        pieces: {},
+        playerSide: side
+    }
+
+    for (const pieceName in pieces) {
+        var gridPosition = pieces[pieceName];
+        var playerPiece = <PlayerPiece>{
+            pieceState: PieceState.alive,
+            gridPosition: gridPosition,
+            pieceName: pieceName
+        }
+
+        player.pieces[pieceName] = playerPiece;
+    }
+
+    return player;
+}
+```
+
+Replace `Foreach` function inside `api?.receiveEvent<GameEvent>()` with the following
+
+```ts
+myPlayerSide = enter.myPlayerSide;
+var player = getStartPosition(enter.myPlayerSide);
+myPlayer = createNewPlayerMesh(player);
+```
 
 I hope you enjoyed this chapter and found it useful, please leave a comment and join me in the next chapter where we'll start to add some movement and see how this looks running on a phone.
 

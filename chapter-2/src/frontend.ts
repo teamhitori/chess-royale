@@ -3,7 +3,7 @@ import { Engine, Scene, Vector3, HemisphericLight, ShadowGenerator, PointLight, 
 import { createFrontend, FrontendTopic } from '@frakas/api/public';
 import { LogLevel } from "@frakas/api/utils/LogLevel";
 import { bufferWhen, filter, map, Subject, tap } from "rxjs";
-import { EnterGame, EventType, GameEvent, GridBlock, GridBlockStatus, PlayerSide } from "./shared";
+import { EnterGame, EventType, FrontendPlayer, GameEvent, GridBlock, GridBlockStatus, gridToWorld, PieceState, Player, PlayerPiece, PlayerSide } from "./shared";
 import 'babylonjs-loaders';
 
 var squareSize = 1;
@@ -11,7 +11,7 @@ var gridWidth = 12;
 var halfGridWidth = gridWidth / 2;
 
 // Create frontend and receive api for calling backend
-var api = (await createFrontend({loglevel: LogLevel.info}))!!;
+var api = (await createFrontend({ loglevel: LogLevel.info }))!!;
 
 // My random player color
 var myColorRaw = Math.floor(Math.floor(Math.random() * 1000));
@@ -127,6 +127,7 @@ var configureMesh = (mesh: AbstractMesh, color: Color3, position: Vector3) => {
     mesh.material = meshMaterial;
     mesh.position = position;
     mesh.isVisible = true;
+    mesh.isPickable = false;
 
     shadowGenerator.addShadowCaster(mesh);
 
@@ -136,26 +137,7 @@ var configureMesh = (mesh: AbstractMesh, color: Color3, position: Vector3) => {
 var chessPieces = assetContainer.instantiateModelsToScene(name => `chess-pieces`, true, { doNotInstantiate: true });
 
 var myPlayerSide: PlayerSide | undefined;
-
-var pieces1 = {
-    "pawn1": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[0].clone("", null, false)!!, Color3.Red(), new Vector3(-10, 0.1, 2)),
-    "pawn2": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[0].clone("", null, false)!!, Color3.Red(), new Vector3(-10, 0.1, 3)),
-    "pawn3": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[0].clone("", null, false)!!, Color3.Red(), new Vector3(-10, 0.1, 4)),
-    "pawn4": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[0].clone("", null, false)!!, Color3.Red(), new Vector3(-10, 0.1, 5)),
-    "pawn5": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[0].clone("", null, false)!!, Color3.Red(), new Vector3(-10, 0.1, 6)),
-    "pawn6": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[0].clone("", null, false)!!, Color3.Red(), new Vector3(-10, 0.1, 7)),
-    "pawn7": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[0].clone("", null, false)!!, Color3.Red(), new Vector3(-10, 0.1, 8)),
-    "pawn8": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[0].clone("", null, false)!!, Color3.Red(), new Vector3(-10, 0.1, 9)),
-    "tower1": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[1].clone("", null, false)!!, Color3.Red(), new Vector3(-11, 0.1, 2)),
-    "tower2": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[1].clone("", null, false)!!, Color3.Red(), new Vector3(-11, 0.1, 9)),
-    "knight1": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[5].clone("", null, false)!!, Color3.Red(), new Vector3(-11, 0.1, 3)),
-    "knight2": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[5].clone("", null, false)!!, Color3.Red(), new Vector3(-11, 0.1, 8)),
-    "bishop1": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[2].clone("", null, false)!!, Color3.Red(), new Vector3(-11, 0.1, 4)),
-    "bishop2": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[2].clone("", null, false)!!, Color3.Red(), new Vector3(-11, 0.1, 7)),
-    "queen": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[3].clone("", null, false)!!, Color3.Red(), new Vector3(-11, 0.1, 5)),
-    "king": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[4].clone("", null, false)!!, Color3.Red(), new Vector3(-11, 0.1, 6))
-}
-
+var myPlayer: FrontendPlayer | undefined;
 
 // Babylonjs on pointerdown event
 scene.onPointerDown = function castRay() {
@@ -168,9 +150,21 @@ scene.onPointerDown = function castRay() {
     }
 }
 
-// Babylonjs on pointerup event
 scene.onPointerUp = function castRay() {
 
+    var ray = scene.createPickingRay(scene.pointerX, scene.pointerY, Matrix.Identity(), camera);
+    var hit = scene.pickWithRay(ray);
+
+    console.log("hit", hit?.pickedMesh?.id, hit?.pickedPoint)
+
+    if (hit?.pickedMesh && hit.pickedMesh.name == "block" && hit.pickedPoint) {
+
+        console.log("hit block", hit.pickedMesh.id);
+
+        if (myPlayer != undefined) {
+            onSelection(myPlayer, +hit.pickedMesh.id);
+        }
+    }
 }
 
 var renderLoop = new Subject<any>();
@@ -198,11 +192,101 @@ api?.receiveEvent<GameEvent>()
                 .filter(gameEvent => gameEvent?.topic == FrontendTopic.privateEvent)
                 .map(gameEvent => gameEvent?.state?.data!! as EnterGame)
                 .forEach(enter => {
-                    console.log(`My Player Side: ${PlayerSide[enter.myPlayerSide]}`)
                     myPlayerSide = enter.myPlayerSide;
+                    var player = getStartPosition(enter.myPlayerSide);
+                    myPlayer = createNewPlayerMesh(player);
                 });
         })
     )
     .subscribe();
 
+export function getStartPosition(side: PlayerSide): Player {
 
+    var pieces: { [piece: string]: number } = {
+        "pawn1": 14,
+        "pawn2": 15,
+        "pawn3": 16,
+        "pawn4": 17,
+        "pawn5": 18,
+        "pawn6": 19,
+        "pawn7": 20,
+        "pawn8": 21,
+        "tower1": 2,
+        "tower2": 9,
+        "knight1": 3,
+        "knight2": 8,
+        "bishop1": 4,
+        "bishop2": 7,
+        "queen": 5,
+        "king": 6
+    }
+
+    var player = <Player>{
+        pieces: {},
+        playerSide: side
+    }
+
+    for (const pieceName in pieces) {
+        var gridPosition = pieces[pieceName];
+        var playerPiece = <PlayerPiece>{
+            pieceState: PieceState.alive,
+            gridPosition: gridPosition,
+            pieceName: pieceName
+        }
+
+        player.pieces[pieceName] = playerPiece;
+    }
+
+    return player;
+}
+
+function createNewPlayerMesh(player: Player): FrontendPlayer {
+
+    var meshes: { [name: string]: AbstractMesh } = {};
+
+    for (const pieceName in player.pieces) {
+        var piece = player.pieces[pieceName]
+        const worldPosition = gridToWorld(piece.gridPosition)
+        meshes[pieceName] = configureMesh(chessPieces.rootNodes[0].getChildMeshes()[pieceMapping[pieceName]].clone("", null, false)!!, Color3.Blue(), worldPosition)
+    }
+
+    return <FrontendPlayer>{
+        meshes: meshes,
+        selectedPiece: undefined,
+        pieces: player.pieces,
+        playerSide: player.playerSide
+    }
+}
+
+
+function onSelection(myPlayer: FrontendPlayer, gridPosition: number) {
+    if (myPlayer.selectedPiece != undefined && myPlayer.selectedPiece.gridPosition != gridPosition) {
+        var newWorldPosition = gridToWorld(gridPosition);
+        var oldPosition = myPlayer.selectedPiece.gridPosition;
+        myPlayer.selectedPiece.gridPosition = gridPosition;
+        myPlayer.meshes[myPlayer.selectedPiece.pieceName].position = newWorldPosition;
+
+        grid[oldPosition].material.diffuseColor = new Color3(1, 1, 1);
+        grid[gridPosition].material.diffuseColor = new Color3(1, 1, 1);
+        myPlayer.selectedPiece = undefined;
+        return
+    }
+
+    for (const pieceName in myPlayer.pieces) {
+        const piece = myPlayer.pieces[pieceName]!!;
+
+        if (piece.gridPosition == gridPosition && piece.pieceState == PieceState.alive) {
+            grid[gridPosition].material.diffuseColor = new Color3(1, 1, 0);
+
+            if (!myPlayer.selectedPiece) {
+                myPlayer.selectedPiece = piece;
+                return;
+            }
+            if (myPlayer.selectedPiece.gridPosition == gridPosition) {
+                myPlayer.selectedPiece = undefined;
+                grid[gridPosition].material.diffuseColor = new Color3(1, 1, 1);
+                return;
+            }
+        }
+    }
+}
