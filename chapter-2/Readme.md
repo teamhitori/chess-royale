@@ -390,13 +390,87 @@ export function getStartPosition(side: PlayerSide): Player {
 }
 ```
 
-Replace `Foreach` function inside `api?.receiveEvent<GameEvent>()` with the following
+Find `api?.receiveEvent<GameEvent>()`, and within the `foreach` function, replace with the following
 
 ```ts
 myPlayerSide = enter.myPlayerSide;
 var player = getStartPosition(enter.myPlayerSide);
 myPlayer = createNewPlayerMesh(player);
 ```
+
+You should now see the following
+
+![Frakas in browser](https://raw.githubusercontent.com/teamhitori/chess-royale/main/raw/player-movement.gif)
+
+4. Add 
+
+Lets create a new file `src/animations.ts`
+
+In it we add the following
+
+``` ts
+import { Animation } from "babylonjs"
+var frameRate = 25;
+```
+Followed by
+```ts
+export function getRotateAlphaAnim(rotationFrom: number, rotationTo: number): Animation {
+    var movein = new Animation(
+        "movein",
+        "alpha",
+        frameRate,
+        BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+    var movein_keys = [];
+    movein_keys.push({
+        frame: 0,
+        value: BABYLON.Tools.ToRadians(rotationFrom)
+    });
+    movein_keys.push({
+        frame: 5 * frameRate,
+        value: BABYLON.Tools.ToRadians(rotationTo)
+    });
+    movein.setKeys(movein_keys);
+    return movein;
+}
+
+export function getRotateBetaAnim(rotationFrom: number, rotationTo: number): Animation {
+    var movein = new Animation(
+        "movein",
+        "beta",
+        frameRate,
+        BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+    var movein_keys = [];
+    movein_keys.push({
+        frame: rotationFrom,
+        value: BABYLON.Tools.ToRadians(0)
+    });
+    movein_keys.push({
+        frame: 5 * frameRate,
+        value: BABYLON.Tools.ToRadians(rotationTo)
+    });
+    movein.setKeys(movein_keys);
+    return movein;
+}
+```
+
+Lets make some changes to `src/frontend.ts`, add the following under where we initalize `engine`
+
+```ts
+engine.loadingScreen.displayLoadingUI();
+```
+
+Find `api?.receiveEvent<GameEvent>()` again, and within the `foreach` function, add the following and update `import` statements
+
+```ts
+engine.loadingScreen.hideLoadingUI();
+scene.beginDirectAnimation(camera, [getRotateAlphaAnim(0, 180), getRotateBetaAnim(10, 60)], 0, 5 * 25, false, 2);
+```
+You should now see the following
+![Frakas in browser](https://raw.githubusercontent.com/teamhitori/chess-royale/main/raw/intro-anim.gif)
 
 I hope you enjoyed this chapter and found it useful, please leave a comment and join me in the next chapter where we'll start to add some movement and see how this looks running on a phone.
 

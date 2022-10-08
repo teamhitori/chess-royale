@@ -5,6 +5,7 @@ import { LogLevel } from "@frakas/api/utils/LogLevel";
 import { bufferWhen, filter, map, Subject, tap } from "rxjs";
 import { EnterGame, EventType, FrontendPlayer, GameEvent, GridBlock, GridBlockStatus, gridToWorld, PieceState, Player, PlayerPiece, PlayerSide } from "./shared";
 import 'babylonjs-loaders';
+import { getRotateAlphaAnim, getRotateBetaAnim } from "./animations";
 
 var squareSize = 1;
 var gridWidth = 12;
@@ -27,19 +28,22 @@ var canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 
 // Load the 3D engine
 var engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+engine.loadingScreen.displayLoadingUI();
 
 // This creates a basic Babylon Scene object (non-mesh)
 var scene = new Scene(engine);
 
 // This creates an arcRotate camera
-var camera = new ArcRotateCamera("camera", BABYLON.Tools.ToRadians(0), BABYLON.Tools.ToRadians(55), 14, new Vector3(halfGridWidth, 0, halfGridWidth), scene);
-
-camera.setTarget(new Vector3(halfGridWidth, 0, halfGridWidth));
-camera.minZ = 0.1;
-camera.wheelPrecision = 100;
+var camera = new ArcRotateCamera("camera", BABYLON.Tools.ToRadians(0), BABYLON.Tools.ToRadians(10), 14, new Vector3(halfGridWidth, 0, halfGridWidth -0.5), scene);
 
 camera.minZ = 0.1;
 camera.wheelPrecision = 100;
+
+camera.minZ = 0.1;
+camera.wheelPrecision = 100;
+camera.upperBetaLimit = BABYLON.Tools.ToRadians(80);
+camera.lowerRadiusLimit = 5;
+camera.upperRadiusLimit = 30;
 
 // This attaches the camera to the canvas
 camera.attachControl(canvas, true);
@@ -168,11 +172,6 @@ scene.onPointerUp = function castRay() {
 }
 
 var renderLoop = new Subject<any>();
-// Babylonjs render loop
-engine.runRenderLoop(() => {
-    renderLoop.next({})
-    scene?.render();
-});
 
 // the canvas/window resize event handler
 window.addEventListener('resize', () => {
@@ -195,6 +194,9 @@ api?.receiveEvent<GameEvent>()
                     myPlayerSide = enter.myPlayerSide;
                     var player = getStartPosition(enter.myPlayerSide);
                     myPlayer = createNewPlayerMesh(player);
+
+                    engine.loadingScreen.hideLoadingUI();
+                    scene.beginDirectAnimation(camera, [getRotateAlphaAnim(0, 180), getRotateBetaAnim(10, 60)], 0, 5 * 25, false, 2);
                 });
         })
     )
@@ -290,3 +292,11 @@ function onSelection(myPlayer: FrontendPlayer, gridPosition: number) {
         }
     }
 }
+
+
+
+// Babylonjs render loop
+engine.runRenderLoop(() => {
+    renderLoop.next({})
+    scene?.render();
+});
