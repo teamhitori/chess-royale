@@ -1,10 +1,9 @@
 
-import { Engine, Scene, Vector3, HemisphericLight, ShadowGenerator, PointLight, MeshBuilder, StandardMaterial, ArcRotateCamera, Matrix, Color3, AssetContainer, SceneLoader, Texture, AbstractMesh } from "babylonjs";
+import { Engine, Scene, Vector3, HemisphericLight, ShadowGenerator, PointLight, MeshBuilder, StandardMaterial, ArcRotateCamera, Matrix, Color3, AssetContainer, SceneLoader, Texture, AbstractMesh, DynamicTexture } from "babylonjs";
 import { createFrontend, FrontendTopic } from '@frakas/api/public';
-import { PlayerEvent } from "./shared";
 import { LogLevel } from "@frakas/api/utils/LogLevel";
-import { filter, tap } from "rxjs";
-
+import { bufferWhen, filter, map, Subject, tap } from "rxjs";
+import { EnterGame, EventType, GameEvent, GridBlock, GridBlockStatus, PlayerSide } from "./shared";
 import 'babylonjs-loaders';
 
 var squareSize = 1;
@@ -12,7 +11,7 @@ var gridWidth = 12;
 var halfGridWidth = gridWidth / 2;
 
 // Create frontend and receive api for calling backend
-var api = (await createFrontend({loglevel: LogLevel.diagnosic}))!!;
+var api = (await createFrontend({loglevel: LogLevel.info}))!!;
 
 // My random player color
 var myColorRaw = Math.floor(Math.floor(Math.random() * 1000));
@@ -66,18 +65,49 @@ ground.position = new Vector3(halfGridWidth - (squareSize / 2), 0, halfGridWidth
 var shadowGenerator = new ShadowGenerator(1024, light);
 shadowGenerator.useExponentialShadowMap = true;
 
+var pieceMapping: { [piece: string]: number } = {
+    "pawn1": 0,
+    "pawn2": 0,
+    "pawn3": 0,
+    "pawn4": 0,
+    "pawn5": 0,
+    "pawn6": 0,
+    "pawn7": 0,
+    "pawn8": 0,
+    "tower1": 1,
+    "tower2": 1,
+    "knight1": 5,
+    "knight2": 5,
+    "bishop1": 2,
+    "bishop2": 2,
+    "queen": 3,
+    "king": 4
+}
+
+var grid: { [index: number]: GridBlock } = {};
+
 for (let index = 0; index < gridWidth * gridWidth; index++) {
     var block = MeshBuilder.CreateBox(`block`, { width: 0.85, height: 0.1, depth: 0.85 });
+    block.id = `${index}`;
     var blockMaterial = new StandardMaterial("groundMaterial", scene);
-    var blockTexture = new Texture(`${api.assetsRoot}/pexels-scott-webb-2824173.jpg`);
-    blockTexture.vScale = 1/ 10;
-    blockTexture.uScale = 1 / 10;
-    blockTexture.uOffset = Math.random();
-    blockTexture.vOffset = Math.random();
-    blockMaterial.diffuseTexture = blockTexture
+    var blockTexture = new DynamicTexture("dynamic texture", { width: 512, height: 256 }, scene);
+
+    var font = "bold 100px monospace";
+
+    blockTexture.drawText(`${index}`, 75, 135, font, "green", "white", true, true);
+
+    var defaultPosition = new Vector3(Math.floor(index / gridWidth), 0.05, index % gridWidth);
+    blockMaterial.diffuseTexture = blockTexture;
     block.material = blockMaterial;
     block.receiveShadows = true;
-    block.position = new Vector3(index % gridWidth, 0.05, Math.floor(index / gridWidth));
+    block.position = defaultPosition;
+
+    grid[index] = <GridBlock>{
+        mesh: block,
+        defaultPosition: defaultPosition,
+        material: blockMaterial,
+        status: GridBlockStatus.unselected
+    }
 }
 
 var assetContainer = await new Promise<AssetContainer>(resolve => {
@@ -104,6 +134,8 @@ var configureMesh = (mesh: AbstractMesh, color: Color3, position: Vector3) => {
 }
 
 var chessPieces = assetContainer.instantiateModelsToScene(name => `chess-pieces`, true, { doNotInstantiate: true });
+
+var myPlayerSide: PlayerSide | undefined;
 
 var pieces1 = {
     "pawn1": configureMesh(chessPieces.rootNodes[0].getChildMeshes()[0].clone("", null, false)!!, Color3.Red(), new Vector3(-10, 0.1, 2)),
@@ -133,25 +165,18 @@ scene.onPointerDown = function castRay() {
 
     if (hit?.pickedMesh && hit.pickedMesh.name == "sphere") {
 
-        // send enable player color event to backend
-        api?.sendEvent(<PlayerEvent>{
-            enable: true,
-            color: myColor
-        });
     }
 }
 
 // Babylonjs on pointerup event
 scene.onPointerUp = function castRay() {
 
-    // send disable player color event to backend
-    api?.sendEvent(<PlayerEvent>{
-        enable: false
-    });
 }
 
+var renderLoop = new Subject<any>();
 // Babylonjs render loop
 engine.runRenderLoop(() => {
+    renderLoop.next({})
     scene?.render();
 });
 
@@ -164,12 +189,20 @@ window.addEventListener('resize', () => {
 api?.playerEnter();
 
 // receive public events from backend
-api?.receiveEvent<PlayerEvent>()
+api?.receiveEvent<GameEvent>()
     .pipe(
-        filter(e => e.topic == FrontendTopic.publicEvent),
+        map(e => e),
+        bufferWhen(() => renderLoop.asObservable()),
         tap(event => {
-            console.log(event)
+            event
+                .filter(gameEvent => gameEvent?.topic == FrontendTopic.privateEvent)
+                .map(gameEvent => gameEvent?.state?.data!! as EnterGame)
+                .forEach(enter => {
+                    console.log(`My Player Side: ${PlayerSide[enter.myPlayerSide]}`)
+                    myPlayerSide = enter.myPlayerSide;
+                });
         })
     )
     .subscribe();
+
 

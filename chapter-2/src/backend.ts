@@ -1,35 +1,43 @@
-import { Color3 } from "babylonjs";
+import { Color3, NullEngine, Scene } from "babylonjs";
 import { BackendTopic, createBackend } from '@frakas/api/public';
-import { PlayerColor, PlayerEvent } from "./shared";
+import { EnterGame, EventType, GameEvent, PlayerSide } from "./shared";
 import { LogLevel } from "@frakas/api/utils/LogLevel";
-import { filter, tap } from "rxjs";
+import { filter, tap, mergeMap, bufferWhen, Subject } from "rxjs";
 
 // Create backend and receive api for calling frontend
 var api = await createBackend({ loglevel: LogLevel.info });
 
-// default sphere color
-var sphereDefaultColor = new Color3(0.7, 0.7, 0.7);
+var engine = new NullEngine();
+var scene = new Scene(engine);
+var renderLoop = new Subject<any>();
+engine.runRenderLoop(() => {
+    renderLoop.next({})
+});
 
-// keep track of entered players
-var playerColors: { [playerPosition: number]: Color3 | undefined } = {};
+var nextSide = 0;
 
-api?.receiveEvent<PlayerEvent>()
+api?.receiveEvent<GameEvent>()
     .pipe(
-        filter(e => e.topic == BackendTopic.playerEvent),
+        filter(e => e.topic == BackendTopic.playerEnter),
+        bufferWhen(() => renderLoop.asObservable()),
+        mergeMap(e => e),
+        filter(e => e?.playerPosition != undefined),
         tap(event => {
-            // set player color (if defined)
-            playerColors[event.playerPosition!!] = event?.state?.color;
-
-            // send most recent color to all players if exists, or else send default color
-            if (event?.state?.color) {
-                api?.sendToAll(<PlayerEvent>{
-                    enable: true,
-                    color: event?.state?.color
-                });
+            var playerPosition = event!!.playerPosition!!;
+            if (nextSide < 4) {
+                
+                console.log(`playerPosition:${playerPosition} is side ${PlayerSide[nextSide]}`);
+                api?.sendToPlayer(
+                    playerPosition,
+                    <GameEvent>{
+                        type: EventType.GameSide,
+                        data: <EnterGame>{
+                            myPlayerSide: nextSide
+                        }
+                    });
+                nextSide++
             } else {
-                api?.sendToAll(<PlayerEvent>{
-                    enable: false
-                });
+                console.log("Game FULL");
             }
         })
     ).subscribe();
