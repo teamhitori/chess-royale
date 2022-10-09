@@ -5,7 +5,7 @@ import { LogLevel } from "@frakas/api/utils/LogLevel";
 import { bufferWhen, filter, map, Subject, tap } from "rxjs";
 import { EnterGame, EventType, FrontendPlayer, GameEvent, GridBlock, GridBlockStatus, gridToWorld, PieceState, Player, PlayerPiece, PlayerSide } from "./shared";
 import 'babylonjs-loaders';
-import { getRotateAlphaAnim, getRotateBetaAnim } from "./animations";
+import { getDiffuseColorAnim, getPositionAnim, getRotateAlphaAnim, getRotateBetaAnim } from "./animations";
 
 var squareSize = 1;
 var gridWidth = 12;
@@ -34,7 +34,7 @@ engine.loadingScreen.displayLoadingUI();
 var scene = new Scene(engine);
 
 // This creates an arcRotate camera
-var camera = new ArcRotateCamera("camera", BABYLON.Tools.ToRadians(0), BABYLON.Tools.ToRadians(10), 14, new Vector3(halfGridWidth, 0, halfGridWidth -0.5), scene);
+var camera = new ArcRotateCamera("camera", BABYLON.Tools.ToRadians(0), BABYLON.Tools.ToRadians(10), 14, new Vector3(halfGridWidth, 0, halfGridWidth - 0.5), scene);
 
 camera.minZ = 0.1;
 camera.wheelPrecision = 100;
@@ -163,11 +163,12 @@ scene.onPointerUp = function castRay() {
 
     if (hit?.pickedMesh && hit.pickedMesh.name == "block" && hit.pickedPoint) {
 
-        console.log("hit block", hit.pickedMesh.id);
-
         if (myPlayer != undefined) {
             onSelection(myPlayer, +hit.pickedMesh.id);
+            setGridColor(myPlayer);
         }
+
+        console.log("hit block", hit.pickedMesh.id, myPlayer);
     }
 }
 
@@ -196,7 +197,7 @@ api?.receiveEvent<GameEvent>()
                     myPlayer = createNewPlayerMesh(player);
 
                     engine.loadingScreen.hideLoadingUI();
-                    scene.beginDirectAnimation(camera, [getRotateAlphaAnim(0, 180), getRotateBetaAnim(10, 60)], 0, 5 * 25, false, 2);
+                    scene.beginDirectAnimation(camera, [getRotateAlphaAnim(0, 180), getRotateBetaAnim(10, 60)], 0, 25, false, 0.5);
                 });
         })
     )
@@ -266,7 +267,9 @@ function onSelection(myPlayer: FrontendPlayer, gridPosition: number) {
         var newWorldPosition = gridToWorld(gridPosition);
         var oldPosition = myPlayer.selectedPiece.gridPosition;
         myPlayer.selectedPiece.gridPosition = gridPosition;
-        myPlayer.meshes[myPlayer.selectedPiece.pieceName].position = newWorldPosition;
+        //myPlayer.meshes[myPlayer.selectedPiece.pieceName].position = newWorldPosition;
+
+        scene.beginDirectAnimation(myPlayer.meshes[myPlayer.selectedPiece.pieceName], [getPositionAnim(myPlayer.meshes[myPlayer.selectedPiece.pieceName].position, newWorldPosition)], 0, 25, false, 10);
 
         grid[oldPosition].material.diffuseColor = new Color3(1, 1, 1);
         grid[gridPosition].material.diffuseColor = new Color3(1, 1, 1);
@@ -289,6 +292,33 @@ function onSelection(myPlayer: FrontendPlayer, gridPosition: number) {
                 grid[gridPosition].material.diffuseColor = new Color3(1, 1, 1);
                 return;
             }
+        }
+    }
+}
+
+function setGridColor(myPlayer: FrontendPlayer) {
+
+    if (myPlayer.selectedPiece == undefined) {
+        for (const gridPos in grid) {
+            const gridEl = grid[gridPos];
+            scene.beginDirectAnimation(gridEl, [getDiffuseColorAnim(gridEl.material.diffuseColor, Color3.FromInts(255,255,255))], 0, 25, false, 3);  
+        }
+    } else {
+        for (const gridPos in grid) {
+            if (myPlayer.selectedPiece.gridPosition == +gridPos) continue;
+            const gridEl = grid[gridPos];
+            var isUserGridEl = false;
+
+            for (const pieceName in myPlayer.pieces) {
+                var piece = myPlayer.pieces[pieceName];
+                if (piece.gridPosition == +gridPos) isUserGridEl = true;
+            }
+
+            var color = Color3.FromInts(255,255,255);
+            if (isUserGridEl) {
+                color = Color3.FromInts(255,50,50);
+            } 
+            scene.beginDirectAnimation(gridEl, [getDiffuseColorAnim(gridEl.material.diffuseColor, color)], 0, 25, false, 3);
         }
     }
 }

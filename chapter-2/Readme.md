@@ -428,7 +428,7 @@ export function getRotateAlphaAnim(rotationFrom: number, rotationTo: number): An
         value: BABYLON.Tools.ToRadians(rotationFrom)
     });
     movein_keys.push({
-        frame: 5 * frameRate,
+        frame: frameRate,
         value: BABYLON.Tools.ToRadians(rotationTo)
     });
     movein.setKeys(movein_keys);
@@ -445,11 +445,11 @@ export function getRotateBetaAnim(rotationFrom: number, rotationTo: number): Ani
     );
     var movein_keys = [];
     movein_keys.push({
-        frame: rotationFrom,
-        value: BABYLON.Tools.ToRadians(0)
+        frame: 0,
+        value: BABYLON.Tools.ToRadians(rotationFrom)
     });
     movein_keys.push({
-        frame: 5 * frameRate,
+        frame: frameRate,
         value: BABYLON.Tools.ToRadians(rotationTo)
     });
     movein.setKeys(movein_keys);
@@ -472,6 +472,102 @@ scene.beginDirectAnimation(camera, [getRotateAlphaAnim(0, 180), getRotateBetaAni
 You should now see the following
 ![Frakas in browser](https://raw.githubusercontent.com/teamhitori/chess-royale/main/raw/intro-anim.gif)
 
-I hope you enjoyed this chapter and found it useful, please leave a comment and join me in the next chapter where we'll start to add some movement and see how this looks running on a phone.
+Lets add the following additional animations to `src/animations.ts`
+
+```ts
+export function getDiffuseColorAnim(colorFrom: Color3, colorTo: Color3): Animation {
+    var movein = new Animation(
+        "color",
+        "material.diffuseColor",
+        frameRate,
+        BABYLON.Animation.ANIMATIONTYPE_COLOR3,
+        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+    var movein_keys = [];
+    movein_keys.push({
+        frame: 0,
+        value: colorFrom
+    });
+    movein_keys.push({
+        frame: frameRate,
+        value: colorTo
+    });
+    movein.setKeys(movein_keys);
+
+    return movein;
+}
+
+export function getPositionAnim(positionFrom: Vector3, positionTo: Vector3): Animation {
+    var movein = new Animation(
+        "color",
+        "position",
+        frameRate,
+        BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
+        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+    var movein_keys = [];
+    movein_keys.push({
+        frame: 0,
+        value: positionFrom
+    });
+    movein_keys.push({
+        frame: frameRate,
+        value: positionTo
+    });
+    movein.setKeys(movein_keys);
+    return movein;
+}
+```
+Inside `src/frontend.ts` add the following
+
+```ts
+function setGridColor(myPlayer: FrontendPlayer) {
+
+    if (myPlayer.selectedPiece == undefined) {
+        for (const gridPos in grid) {
+            const gridEl = grid[gridPos];
+            scene.beginDirectAnimation(gridEl, [getDiffuseColorAnim(gridEl.material.diffuseColor, Color3.FromInts(255,255,255))], 0, 25, false, 3);  
+        }
+    } else {
+        for (const gridPos in grid) {
+            if (myPlayer.selectedPiece.gridPosition == +gridPos) continue;
+            const gridEl = grid[gridPos];
+            var isUserGridEl = false;
+
+            for (const pieceName in myPlayer.pieces) {
+                var piece = myPlayer.pieces[pieceName];
+                if (piece.gridPosition == +gridPos) isUserGridEl = true;
+            }
+
+            var color = Color3.FromInts(255,255,255);
+            if (isUserGridEl) {
+                color = Color3.FromInts(255,50,50);
+            } 
+            scene.beginDirectAnimation(gridEl, [getDiffuseColorAnim(gridEl.material.diffuseColor, color)], 0, 25, false, 3);
+        }
+    }
+}
+```
+
+Find call to `onSelection(myPlayer, +hit.pickedMesh.id)` inside `src/frontend.ts` and add the following additional call
+
+```ts
+setGridColor(myPlayer);
+```
+
+Inside `function onSelection` replace the following line
+
+```ts
+myPlayer.meshes[myPlayer.selectedPiece.pieceName].position = newWorldPosition;
+```
+with
+```ts
+scene.beginDirectAnimation(myPlayer.meshes[myPlayer.selectedPiece.pieceName], [getPositionAnim(myPlayer.meshes[myPlayer.selectedPiece.pieceName].position, newWorldPosition)], 0, 25, false, 10);
+```
+
+You should now see the following
+![Frakas in browser](https://raw.githubusercontent.com/teamhitori/chess-royale/main/raw/movement-anim.gif)
+
+I hope you enjoyed this chapter and found it useful, please join me in the next chapter where we'll start to construct the game logic.
 
 Thanks!
