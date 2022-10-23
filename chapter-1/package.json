@@ -12,7 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@frakas/api": "^0.1.7",
+    "@frakas/api": "^0.1.9",
+    "@frakas/cli": "^0.0.86",
     "babylonjs": "^5.26.1",
     "babylonjs-gui": "^5.26.1",
     "babylonjs-loaders": "^5.26.1",
