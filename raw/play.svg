@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 162 32"
+   width="162"
+   height="32"
+   version="1.1"
+   id="svg10"
+   sodipodi:docname="play.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs14" />
+  <sodipodi:namedview
+     id="namedview12"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="3.6875"
+     inkscape:cx="78.644068"
+     inkscape:cy="-0.40677966"
+     inkscape:window-width="2256"
+     inkscape:window-height="1415"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg10" />
+  <title
+     id="title2">Open in StackBlitz</title>
+  <rect
+     width="162"
+     height="32"
+     rx="4"
+     fill="#1374EF"
+     id="rect4" />
+  <path
+     fill="#1269D3"
+     d="M32 0h1v32h-1z"
+     id="path6" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.6667px;line-height:1.25;font-family:'Roboto Thin';-inkscape-font-specification:'Roboto Thin, Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+     x="41.762711"
+     y="19.93523"
+     id="text228"><tspan
+       sodipodi:role="line"
+       id="tspan226"
+       x="41.762711"
+       y="19.93523"
+       style="font-size:14.6667px;fill:#ffffff">Play Chess Royal</tspan></text>
+  <g
+     id="g616"
+     transform="matrix(0.47154093,0,0,0.47154093,31.11378,8.1235347)"
+     style="fill:#ffffff">
+    <path
+       d="m -45.838598,11.743175 c -1.39395,-1.8123097 -3.82488,-3.5804497 -1.70048,-5.3343397 2.12393,-1.7552 11.17405,-8.68056 13.75907,-10.71213 2.58526,-2.03157 2.21665,-4.61647 2.03157,-5.7252703 -0.18503,-1.10831 3.41626,0.3705203 4.52458,2.7708103 1.10832,2.40077 3.9709,2.30889 5.7261,2.30889 1.75425,0 10.24986,3.23177 9.51157,28.0737197 -4.52459,-1.47789 -8.49549,5.44878 -8.49549,5.44878 h -15.42226 l -5.07922,-7.47952 c 0,0 12.46626,-7.0195 12.65146,-12.9292497 -5.07922,4.7096597 -6.27896,2.8625697 -8.95741,2.8625697 -2.67761,-0.001 -5.49424,4.68509 -8.5489,0.716 z"
+       id="path443"
+       style="fill:#ffffff;stroke-width:0.118715" />
+    <path
+       d="m -15.026128,34.537635 c 0,0.73131 -0.59822,1.32949 -1.32949,1.32949 h -24.70577 c -0.73131,0 -1.32949,-0.59822 -1.32949,-1.32949 v -3.98906 c 0,-0.73131 0.59821,-1.32949 1.32949,-1.32949 h 24.70577 c 0.73131,0 1.32949,0.59822 1.32949,1.32949 z"
+       id="path445"
+       style="fill:#ffffff;stroke-width:0.118715" />
+    <path
+       d="m -13.252528,38.534765 c 0,0.73131 -0.59821,1.32949 -1.32949,1.32949 h -28.14494 c -0.73131,0 -1.32949,-0.59821 -1.32949,-1.32949 v -0.66499 c 0,-0.73131 0.59821,-1.32949 1.32949,-1.32949 h 28.14376 c 0.73131,0 1.32949,0.59822 1.32949,1.32949 z"
+       id="path447"
+       style="fill:#ffffff;stroke-width:0.118715" />
+    <path
+       d="m -11.940728,42.480855 c 0,0.73131 -0.59821,1.32949 -1.32948,1.32949 h -30.76737 c -0.73131,0 -1.32949,-0.59822 -1.32949,-1.32949 v -0.66407 c 0,-0.73131 0.59822,-1.32949 1.32949,-1.32949 h 30.76737 c 0.7313,0 1.32948,0.59822 1.32948,1.32949 l 4.5e-4,0.66407 z"
+       id="path449"
+       style="fill:#ffffff;stroke-width:0.118715" />
+  </g>
+  <metadata
+     id="metadata618">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>Open in StackBlitz</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>
