@@ -1,20 +1,23 @@
-# Chess royal
+# How to Build 4 Player Chess Game Using Free APIs. BabylonJs, Frakas. Part 1 - Setting things up☝️
 
-6 part series on how to build multiplayer game using Frakas.
+## What is this article all about?
 
-## Part 1 - Setting things up
-### Part 2 - Adding movement
-### Part 3 - Adding game logic
-### Part 4 - Adding multiplayer logic
-### Part 5 - Putting game into the cloud
-### Part 6 - Wrapping things up
+Writing games are both a uniquily challenging and rewarding edevour, they're a great way to improve you're analytical skills, and the fruits of a well written game are well..
 
-Final game can be played here: `<placehoder>`
+![Juicy](https://media.giphy.com/media/A6soRJp32I7fy/giphy.gif)
+
+Let's not dilly dally and walk through the steps to create a web brower based, online, 4 player Chess game.
+
+![Alt text of a GIF](https://media.giphy.com/media/l3q2XnJo1OVj2pgmQ/giphy.gif)
+
+For those who want to sample the product first, a live version of the game fcan be found here:
+
+# [Play Chess Royale](https://chess-royale.frakas.net)
 
 ## Setting things up
 
 ### 1. Project setup
-To get started with Frakas, you'll first need to install [NodeJs](https://nodejs.org)
+To follow along with this tutorial, you'll first need to install [NodeJs](https://nodejs.org)
 
 I'll be using [VSCode](https://code.visualstudio.com/) for my text editor and development environment, but use whatever editor you are comfortable with.
 
