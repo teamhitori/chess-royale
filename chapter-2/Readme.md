@@ -8,7 +8,13 @@ In this turorial, I'd like to build on the work that we did in my first tutorial
 
 Today I'll build on this by adding a basic single player mode.
 
+[![Play Chess Royale](https://raw.githubusercontent.com/teamhitori/chess-royale/main/raw/play.svg)](https://chess-royale.frakas.net)
+
+
+[![Play Chess Royale](https://github.com/teamhitori/chess-royale/blob/chapter-2.dev.to/raw/single-player-hard.gif?raw=true
+)](https://chess-royale.frakas.net)
 Play the Final game Here
+
 
 At the end of this tutorial we'll have created the following
 
