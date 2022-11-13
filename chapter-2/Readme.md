@@ -127,7 +127,7 @@ import './babylonGameScene';
 
 Your code shold look as follows:
 ### Stackblitz
-{% stackblitz https://stackblitz.com/edit/frakas-chess-royale-11-9mm6h5?file=src/frontend.ts %}
+{% stackblitz https://stackblitz.com/edit/frakas-chess-royale-11-cgu2oo?file=src/frontend.ts %}
 
 Lets capture a pointer event in order to move our chess pieces
 
@@ -224,9 +224,13 @@ function playerMove(playerSide: PlayerSide, confirmedMove: RequestMove) {
 
 ```
 
-We pass in our player object ad details of the confirmed move, and use this to update our mesh position. At this point we should have movement, a bit jumpy and hard to follow at this point but a good start. Lets add some animation to make things clearer to see.
+We pass in our player object ad details of the confirmed move, and use this to update our mesh position. At this point we should have movement, a bit jumpy and hard to follow at this point but a good start. 
 
-{% stackblitz https://stackblitz.com/edit/frakas-chess-royale-11-cgu2oo?file=src/shared.ts %}
+![Movement](https://github.com/teamhitori/chess-royale/blob/main/raw/2.2.gif?raw=true)
+
+Lets add some animation to make things clearer to see.
+
+{% stackblitz https://stackblitz.com/edit/frakas-chess-royale-11-9mm6h5?file=src/frontend.ts %}
 
 ## 2. Adding Animation
 
@@ -424,6 +428,9 @@ scene.beginDirectAnimation(
 
 We should how have the following:
 
+![Animated Movement](https://github.com/teamhitori/chess-royale/blob/main/raw/2.3.gif?raw=true)
+
+### Stackblitz
 {% stackblitz https://stackblitz.com/edit/frakas-chess-royale-11-51c3e2?file=src/frontend.ts %}
 
 ## 3. Adding movement rules
@@ -664,16 +671,26 @@ function setGridColor(validMoveList: PlayerAction[]) {
 }
 ```
 
-{% stackblitz https://stackblitz.com/edit/frakas-chess-royale-11-zanxnd?file=src/shared.ts %}
+![Player Rules](https://github.com/teamhitori/chess-royale/blob/main/raw/2.4.gif?raw=true)
+
+### Stackblitz
+{% stackblitz https://stackblitz.com/edit/frakas-chess-royale-11-zanxnd?file=src/frontend.ts %}
 
 ## 4. Adding Game Logic
 
+![Game Rules](https://github.com/teamhitori/chess-royale/blob/main/raw/2.5.gif?raw=true)
+
+### Stackblitz
+{% stackblitz https://stackblitz.com/edit/frakas-chess-royale-11-hgtz5q?file=src/frontend.ts %}
 
 ## 5. Adding AI
 ![AI](https://media.giphy.com/media/C3DJ5zE2l2VUc/giphy.gif)
 
+
+![AI](https://github.com/teamhitori/chess-royale/blob/main/raw/2.6.gif?raw=true)
+
 ### Stackblitz
-{% stackblitz https://stackblitz.com/edit/frakas-chess-royale-11-51c3e2?file=src/frontend.ts %}
+{% stackblitz https://stackblitz.com/edit/frakas-chess-royale-11-nnaom6?file=src/frontend.ts %}
 
 This completes the initial game setup, and everything I wanted to get to in this tutorial. I really hope you enjoyed, and thank for reading to the end 👏 Please stay tunes for the next article where I will run through adding movement and setting up the backend so that multiple players can complete. Any feedback, would be great to hear from you in the comments!
 
